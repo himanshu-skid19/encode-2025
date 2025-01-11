@@ -1,3 +1,9 @@
 langchain
 streamlit
 anthropic
+phidata
+pymongo
+twilio
+openai
+duckduckgo-search
+pyaudio

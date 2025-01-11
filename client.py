@@ -17,6 +17,7 @@ import os
 import json
 import threading
 import janus
+import time
 import queue
 import sys
 from datetime import datetime
@@ -24,13 +25,22 @@ from langchain import hub
 from dotenv import load_dotenv
 from prompt import PROMPT
 load_dotenv()
+import logging
 
-# troubleshooting notes
-#if you tend to close your laptop versus shutting down each night, I would recommend that you restart. I know that portaudio is a little temperamental if it isnt shutdown correctly (ie doing a cntl + c for a break).
+from functions import FUNCTION_DEFINITIONS, FUNCTION_MAP
 
-# use postman to test the api key and endpoint
+# Configure logging
+logger = logging.getLogger()
 
-# Deepgram Voice Agent Code using Azure OpenAI Services
+# Create console handler with a simple formatter
+console_handler = logging.StreamHandler()
+
+# Set the logging level (INFO in this case)
+logger.setLevel(logging.INFO)
+logger.addHandler(console_handler)
+
+# Remove any existing handlers from the root logger to avoid duplicate messages
+logging.getLogger().handlers = []
 
 # Your Deepgram Voice Agent URL
 VOICE_AGENT_URL = "wss://agent.deepgram.com/agent"
@@ -78,16 +88,21 @@ SETTINGS = {
             "model": LISTEN
         },
        "think": {
-      "provider": {
-        "type": "anthropic"
-      },
-      "model": LLM_MODEL,
-      "instructions": PROMPT
-    },
+            "provider": {"type": "anthropic"},
+            "model": LLM_MODEL,
+            "instructions": PROMPT,
+            # "functions": FUNCTION_DEFINITIONS
+        },
         "speak": {
             "model": VOICE
         },
     },
+    # "context": {
+    #     "messages": [
+    #         {"role": "assistant", "content": "Good day! This is Emily from Team 67. I’m reaching out today to introduce you to our latest laptop, the Vertex UltraBook 15X Pro. It’s an ultra-portable powerhouse, perfect for both work and entertainment. Do you have a moment to hear more about how it can benefit you?"}
+    #     ],
+    #     "replay": True
+    # }
 }
 
 
@@ -147,7 +162,7 @@ async def run():
             except Exception as e:
                 print("Error while sending: " + str(e))
                 raise
-
+        
         async def receiver(ws):
             try:
                 speaker = Speaker()
@@ -158,12 +173,40 @@ async def run():
 
                             if json.loads(message)["type"] == "UserStartedSpeaking":
                                 speaker.stop()
+            
 
+                            # elif json.loads(message)["type"] == "FunctionCallRequest":
+                            #     print(message)
+                            #     function_name = json.loads(message)["function_name"]
+                            #     function_call_id = json.loads(message)("function_call_id")
+                            #     parameters = json.loads(message).get("input", {})
+                                
+                            # #     start_time = time.time()
+                            #     try:
+                            #         func = FUNCTION_MAP.get(function_name)
+                            #         if not func:
+                            #             raise ValueError(f"Function {function_name} not found") 
+                            #         result = await func(parameters)
+
+                            #     except Exception as e:
+                            #         logger.error(f"Error executing function: {str(e)}")
+                            #         result = {"error": str(e)}
+
+                            #     # Send the response back with stringified output (for non-agent_filler functions)
+                            #     response = {
+                            #         "type": "FunctionCallResponse",
+                            #         "function_call_id": function_call_id,
+                            #         "output": json.dumps(result)
+                            #     }
+                            #     await ws.send(json.dumps(response))
+                            #     logger.info(f"Function response sent: {json.dumps(result)}")
                         elif type(message) is bytes:
                             await speaker.play(message)
 
             except Exception as e:
+                # logger.error(f"Error in receiver: {e}")
                 print(e)
+
 
         await asyncio.wait(
             [
