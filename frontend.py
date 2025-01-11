@@ -20,7 +20,6 @@ import janus
 import queue
 import sys
 from datetime import datetime
-
 # troubleshooting notes
 #if you tend to close your laptop versus shutting down each night, I would recommend that you restart. I know that portaudio is a little temperamental if it isnt shutdown correctly (ie doing a cntl + c for a break).
 
@@ -136,41 +135,6 @@ USER_AUDIO_SAMPLES_PER_CHUNK = round(USER_AUDIO_SAMPLE_RATE * USER_AUDIO_SECS_PE
 AGENT_AUDIO_SAMPLE_RATE = 16000
 AGENT_AUDIO_BYTES_PER_SEC = 2 * AGENT_AUDIO_SAMPLE_RATE
 
-# SETTINGS = {
-#     "type": "SettingsConfiguration",
-#     "audio": {
-#         "input": {
-#             "encoding": "linear16",
-#             "sample_rate": USER_AUDIO_SAMPLE_RATE,
-#         },
-#         "output": {
-#             "encoding": "linear16",
-#             "sample_rate": AGENT_AUDIO_SAMPLE_RATE,
-#             "container": "none",
-#         },
-#     },
-#     "agent": {
-#         "listen": {
-#             "model": LISTEN
-#         },
-#         "think": {
-#             "provider": {
-#               "type": "open_ai",
-#             },
-#             "model": LLM_MODEL,
-#             "instructions": PROMPT,
-#         },
-#         "speak": {
-#             "model": VOICE
-#         },
-#     },
-#     "context": {
-#         "messages": [], # LLM message history (e.g. to restore existing conversation if websocket connection breaks)
-#         "replay": False # whether to replay the last message, if it is an assistant message
-#     }
-# }
-
-
 SETTINGS = {
     "type": "SettingsConfiguration",
     "audio": {
@@ -205,162 +169,14 @@ SETTINGS = {
     # }
 }
 
-# SETTINGS = {
-#     "type": "SettingsConfiguration",
-#     "audio": {
-#         "input": {
-#             "encoding": "linear16",
-#             "sample_rate": USER_AUDIO_SAMPLE_RATE,
-#         },
-#         "output": {
-#             "encoding": "linear16",
-#             "sample_rate": AGENT_AUDIO_SAMPLE_RATE,
-#             "container": "none",
-#         },
-#     },
-#     "agent": {
-#         "listen": {
-#             "model": LISTEN
-#         },
-#         "think": {
-#             "provider": {
-#               "type": "custom",
-#               "url": "https://api.groq.com/openai/v1/chat/completions",
-#               "headers": [
-#                 {
-#                   "key": "api-key",
-#                   "value": os.environ.get("GROQ_API_KEY")
-#                 }
-#               ]
-#             },
-#             "model": LLM_MODEL,
-#             "instructions": PROMPT,
-#         },
-#         "speak": {
-#             "model": VOICE
-#         },
-#     },
-#     "context": {
-#         "messages": [], # LLM message history (e.g. to restore existing conversation if websocket connection breaks)
-#         "replay": False # whether to replay the last message, if it is an assistant message
-#     }
-# }
-
-
-mic_audio_queue = asyncio.Queue()
-
-
-def callback(input_data, frame_count, time_info, status_flag):
-    mic_audio_queue.put_nowait(input_data)
-    return (input_data, pyaudio.paContinue)
-
-
-async def run():
-    dg_api_key = os.environ.get("DEEPGRAM_API_KEY")
-    if dg_api_key is None:
-        print("DEEPGRAM_API_KEY env var not present")
-        return
-
-    # azure_api_key = os.environ.get("AZURE_OPENAI_API_KEY")
-    # if azure_api_key is None:
-    #     print("AZURE_OPENAI_API_KEY env var not present")
-    #     return
-
-    async with websockets.connect(
-        VOICE_AGENT_URL,
-        extra_headers={"Authorization": f"Token {dg_api_key}"},
-    ) as ws:
-
-        async def microphone():
-            audio = pyaudio.PyAudio()
-            stream = audio.open(
-                format=pyaudio.paInt16,
-
-                rate=USER_AUDIO_SAMPLE_RATE,
-                input=True,
-                frames_per_buffer=USER_AUDIO_SAMPLES_PER_CHUNK,
-                stream_callback=callback,
-                channels=1
-            )
-
-            stream.start_stream()
-
-            while stream.is_active():
-                await asyncio.sleep(0.1)
-
-            stream.stop_stream()
-            stream.close()
-
-        async def sender(ws):
-            await ws.send(json.dumps(SETTINGS))
-
-            try:
-                while True:
-                    data = await mic_audio_queue.get()
-                    await ws.send(data)
-
-            except Exception as e:
-                print("Error while sending: " + str(e))
-                raise
-
-        async def receiver(ws):
-            try:
-                speaker = Speaker()
-                with speaker:
-                    async for message in ws:
-                        if type(message) is str:
-                            print(message)
-
-                            if json.loads(message)["type"] == "UserStartedSpeaking":
-                                speaker.stop()
-
-                        elif type(message) is bytes:
-                            await speaker.play(message)
-
-            except Exception as e:
-                print(e)
-
-        await asyncio.wait(
-            [
-                asyncio.ensure_future(microphone()),
-                asyncio.ensure_future(sender(ws)),
-                asyncio.ensure_future(receiver(ws)),
-            ]
-        )
-
-
-def main():
-    asyncio.run(run())
-
-
-def _play(audio_out, stream, stop):
-    while not stop.is_set():
-        try:
-            # Janus sync queue mimics the API of queue.Queue, and async queue mimics the API of
-            # asyncio.Queue. So for this line check these docs:
-            # https://docs.python.org/3/library/queue.html#queue.Queue.get.
-            #
-            # The timeout of 0.05 is to prevent this line from going into an uninterruptible wait,
-            # which can interfere with shutting down the program on some systems.
-            data = audio_out.sync_q.get(True, 0.05)
-
-            # In PyAudio's "blocking mode," the `write` function will block until playback is
-            # finished. This is why we can stop playback very quickly by simply stopping this loop;
-            # there is never more than 1 chunk of audio awaiting playback inside PyAudio.
-            # Read more: https://people.csail.mit.edu/hubert/pyaudio/docs/#example-blocking-mode-audio-i-o
-            stream.write(data)
-
-        except queue.Empty:
-            pass
-
-
-class Speaker:
+class StreamlitSpeaker:
+    # [StreamlitSpeaker class remains the same]
     def __init__(self):
         self._queue = None
         self._stream = None
         self._thread = None
         self._stop = None
-
+        
     def __enter__(self):
         audio = pyaudio.PyAudio()
         self._stream = audio.open(
@@ -373,9 +189,12 @@ class Speaker:
         self._queue = janus.Queue()
         self._stop = threading.Event()
         self._thread = threading.Thread(
-            target=_play, args=(self._queue, self._stream, self._stop), daemon=True
+            target=self._play, 
+            args=(self._queue, self._stream, self._stop), 
+            daemon=True
         )
         self._thread.start()
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self._stop.set()
@@ -385,6 +204,14 @@ class Speaker:
         self._queue = None
         self._thread = None
         self._stop = None
+
+    def _play(self, audio_out, stream, stop):
+        while not stop.is_set():
+            try:
+                data = audio_out.sync_q.get(True, 0.05)
+                stream.write(data)
+            except queue.Empty:
+                pass
 
     async def play(self, data):
         return await self._queue.async_q.put(data)
@@ -397,6 +224,143 @@ class Speaker:
                 except janus.QueueEmpty:
                     break
 
+def initialize_session_state():
+    if 'conversation_history' not in st.session_state:
+        st.session_state.conversation_history = []
+    if 'messages_container' not in st.session_state:
+        st.session_state.messages_container = st.empty()
+
+class VoiceAgent:
+    def __init__(self):
+        self.mic_audio_queue = asyncio.Queue()
+        
+    def audio_callback(self, input_data, frame_count, time_info, status_flag):
+        self.mic_audio_queue.put_nowait(input_data)
+        return (input_data, pyaudio.paContinue)
+
+    async def run_agent(self):
+        dg_api_key = os.environ.get("DEEPGRAM_API_KEY")
+        if dg_api_key is None:
+            st.error("DEEPGRAM_API_KEY env var not present")
+            return
+
+        async with websockets.connect(
+            VOICE_AGENT_URL,
+            extra_headers={"Authorization": f"Token {dg_api_key}"},
+        ) as ws:
+            async def microphone():
+                audio = pyaudio.PyAudio()
+                stream = audio.open(
+                    format=pyaudio.paInt16,
+                    rate=USER_AUDIO_SAMPLE_RATE,
+                    input=True,
+                    frames_per_buffer=USER_AUDIO_SAMPLES_PER_CHUNK,
+                    stream_callback=self.audio_callback,
+                    channels=1
+                )
+                stream.start_stream()
+                while stream.is_active():
+                    await asyncio.sleep(0.1)
+                stream.stop_stream()
+                stream.close()
+
+            async def sender(ws):
+                await ws.send(json.dumps(SETTINGS))
+                try:
+                    while True:
+                        data = await self.mic_audio_queue.get()
+                        await ws.send(data)
+                except Exception as e:
+                    st.error(f"Error while sending: {str(e)}")
+                    raise
+
+            async def receiver(ws):
+                try:
+                    speaker = StreamlitSpeaker()
+                    with speaker:
+                        async for message in ws:
+                            if isinstance(message, str):
+                                print(message)
+                                msg_data = json.loads(message)
+                                print("hehe",msg_data["type"], "hehe")
+                                if msg_data["type"] == 'ConversationText' and msg_data["role"] == "user":
+                                    new_message = {
+                                        "role": "user",
+                                        "content": msg_data["content"],
+                                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                                    }
+
+                                    print(1, new_message)
+                                    st.session_state.conversation_history.append(new_message)
+                                    render_conversation()
+                                
+                                elif  (msg_data["type"] == "ConversationText" and msg_data["role"] == "assistant"):
+                                    if msg_data.get("role") == "assistant":
+                                        new_message = {
+                                            "role": "assistant",
+                                            "content": msg_data["content"],
+                                            "timestamp": datetime.now().strftime("%H:%M:%S")
+                                        }
+                                        print(2, new_message)
+                                        st.session_state.conversation_history.append(new_message)
+                                        render_conversation()
+                                        
+                                
+                                elif msg_data["type"] == "UserStartedSpeaking":
+                                    speaker.stop()
+                            
+                            elif isinstance(message, bytes):
+                                await speaker.play(message)
+                            
+                except Exception as e:
+                    st.error(f"Error in receiver: {str(e)}")
+
+            await asyncio.wait([
+                asyncio.ensure_future(microphone()),
+                asyncio.ensure_future(sender(ws)),
+                asyncio.ensure_future(receiver(ws))
+            ])
+
+def render_conversation():
+    # Clear existing messages
+    st.session_state.messages_container.empty()
+    
+    # Create a new container for messages
+    with st.session_state.messages_container.container():
+        for message in st.session_state.conversation_history:
+            with st.chat_message(message["role"]):
+                st.write(f"**{message['timestamp']}**")
+                st.write(message["content"])
+
+def main():
+    st.set_page_config(page_title="Voice Assistant", page_icon="🎤", layout="wide")
+    
+    st.title("🎤 Voice Assistant")
+    st.write("Speak to interact with the AI assistant. Your conversation will appear below in real-time.")
+    
+    # Initialize session state
+    initialize_session_state()
+    
+    # Create two columns
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.subheader("Conversation")
+        # Create a container for messages
+        st.session_state.messages_container = st.empty()
+        render_conversation()
+    
+    with col2:
+        st.subheader("Status")
+        status_placeholder = st.empty()
+        status_placeholder.info("Listening...")
+    
+    # Run the voice agent
+    try:
+        agent = VoiceAgent()
+        asyncio.run(agent.run_agent())
+    except Exception as e:
+        st.error(f"Error running voice agent: {str(e)}")
 
 if __name__ == "__main__":
-    sys.exit(main() or 0)
+    main()
