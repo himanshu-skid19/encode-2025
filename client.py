@@ -49,7 +49,7 @@ VOICE = "aura-asteria-en"
 LISTEN = "nova-2"
 # Your model from Azure OpenAI Services
 # LLM_MODEL = "gpt-4o"
-LLM_MODEL = "claude-3-haiku-20240307"
+LLM_MODEL = "claude-3-5-haiku-20241022"
 
 
 USER_AUDIO_SAMPLE_RATE = 16000
@@ -88,10 +88,6 @@ SETTINGS = {
             "model": VOICE
         },
     },
-    "context": {
-        "messages": [], # LLM message history (e.g. to restore existing conversation if websocket connection breaks)
-        "replay": False # whether to replay the last message, if it is an assistant message
-    }
 }
 
 
