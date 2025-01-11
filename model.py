@@ -2,13 +2,16 @@ from pymongo import MongoClient, uri_parser
 from twilio.rest import Client
 from twilio.twiml.voice_response import VoiceResponse
 import os
+from dotenv import load_dotenv
 
-mongoURL = os.environ.get("MONGO_URL")
+load_dotenv()
+
+mongoURL = os.getenv("MONGO_URL")
 def get_customer_data():
     # MongoDB connection string
     
     # Parse the connection string to extract the database name
-    parsed_uri = uri_parser.parse_uri(mongoURL)
+    #parsed_uri = uri_parser.parse_uri(mongoURL)
     #db_name = parsed_uri.get("database")  # Extract the database name
     db_name = "ENCODE"
 
@@ -22,13 +25,14 @@ def get_customer_data():
 
     # Retrieve all customer data
     customer_data = list(collection.find({}))  # You can add filters if needed
+    print("Customer Data: ", customer_data)
     return customer_data
 
 def get_product_data():
     # MongoDB connection string
 
     # Parse the connection string to extract the database name
-    parsed_uri = uri_parser.parse_uri(mongoURL)
+    #parsed_uri = uri_parser.parse_uri(mongoURL)
     #db_name = parsed_uri.get("database")  # Extract the database name
     db_name = "ENCODE"
     if not db_name:
@@ -45,10 +49,9 @@ def get_product_data():
 
 def get_call_data():
     # MongoDB connection string
-    mongoURL = "mongodb+srv://actedcone:dualipa@atlascluster.t9cnxbb.mongodb.net/?retryWrites=true&w=majority&appName=AtlasCluster"
 
     # Parse the connection string to extract the database name
-    parsed_uri = uri_parser.parse_uri(mongoURL)
+    #parsed_uri = uri_parser.parse_uri(mongoURL)
     db_name = "ENCODE"
 
     if not db_name:
@@ -88,15 +91,17 @@ def filter_customers_by_score(customers_data, products_data, calls_data, THRESHO
 
 
 def initiate_calls(customers):
+    print("Initiating calls to customers...")
     # Twilio credentials (replace with your actual credentials)
-    account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
-    auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
     client = Client(account_sid, auth_token)
 
     for customer in customers:
+        print("Customer: ", customer)
         phone_number = customer.get("customer_number")
         survey_analysis = customer.get("survey_analysis", "No analysis available.")
-
+        print(f"Initiating call to {phone_number}...")
         if phone_number:
              # Generate TwiML with TTS
             response = VoiceResponse()
@@ -104,11 +109,12 @@ def initiate_calls(customers):
             call = client.calls.create(
                # url = "http://demo.twilio.com/docs/voice.xml",
                 to="+91 79828 39139",
-                from_=os.environ.get("TWILIO_PHONE_NUMBER"),  # Replace with your Twilio number
+                from_=os.getenv("TWILIO_PHONE_NUMBER"),  # Replace with your Twilio number
                 twiml=str(response)
             )
             print(f"Call initiated to {phone_number}, Call SID: {call.sid}")
 def main():
+    print("Starting the voice call agent...")
     # Step 1: Retrieve data from MongoDB
     customers = get_customer_data()
     products = get_product_data()
