@@ -213,53 +213,7 @@ class VoiceAgent:
                 stream.close()
 
             async def sender(ws):
-                print('heheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
-                with open("prompt.txt", "r") as f:
-                    prompt = f.read().strip()
-                    if(prompt != ""):
-                        print('-----------', prompt)
-
-                    
-                        # SETTINGS["agent"]["think"]["instructions"] = prompt
-
-                        SETTINGS1 = {
-                            "type": "SettingsConfiguration",
-                            "audio": {
-                                "input": {
-                                    "encoding": "linear16",
-                                    "sample_rate": USER_AUDIO_SAMPLE_RATE,
-                                },
-                                "output": {
-                                    "encoding": "linear16",
-                                    "sample_rate": AGENT_AUDIO_SAMPLE_RATE,
-                                    "container": "none",
-                                },
-                            },
-                            "agent": {
-                                "listen": {
-                                    "model": LISTEN
-                                },
-                            "think": {
-                            "provider": {
-                                "type": "anthropic"
-                            },
-                            "model": LLM_MODEL,
-                            "instructions": prompt,
-                            "functions": FUNCTION_DEFINITIONS
-                            },
-                                "speak": {
-                                    "model": VOICE
-                                },
-                            },
-                            # "context": {
-                            #     "messages": [], # LLM message history (e.g. to restore existing conversation if websocket connection breaks)
-                            #     "replay": False # whether to replay the last message, if it is an assistant message
-                            # }
-                        }
-                        await ws.send(json.dumps(SETTINGS1))
-                    else:
-                        print(prompt, '--------')
-                        await ws.send(json.dumps(SETTINGS))
+                await ws.send(json.dumps(SETTINGS))
                 try:
                     while True:
                         data = await self.mic_audio_queue.get()

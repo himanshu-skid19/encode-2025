@@ -3,7 +3,6 @@ import chromadb
 import os
 from chromadb.utils import embedding_functions
 from pymongo import MongoClient
-
 # Configure Gemini API
 os.environ["GEMINI_API_KEY"] = 'AIzaSyDO_9k4-rG2UoeRW5AQirXBvx6_XRVZpBo'
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
