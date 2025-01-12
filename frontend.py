@@ -67,7 +67,7 @@ os.environ["GROQ_API_KEY"] = "gsk_rZXEaboA5aaTSfjsu0rJWGdyb3FYGwQbXZMd5og1i27bj3
 
 
 # Your Deepgram TTS model
-VOICE = "aura-asteria-en"
+VOICE = "aura-luna-en"
 # Your Deepgram STT model
 LISTEN = "nova-2"
 # Your model from Azure OpenAI Services

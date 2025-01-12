@@ -68,7 +68,7 @@ try:
          
             st.subheader("Customer Purchase History")
             for _, customer in customers_df.iterrows():
-                with st.expander(f"Customer: {customer['name']}"):
+                with st.expander(f"Customer: {customer['name']}, Score: {customer['customer_score']}"):
                     products_bought = pd.DataFrame(customer['products'])
                     st.dataframe(products_bought)
     

@@ -219,7 +219,12 @@ survey_collection = db.survey
 
 # products_collection.insert_many(additional_products_data)
 
-
+for customer in customers_collection.find():
+    customers_collection.update_one(
+        {'_id': customer['_id']},  # Find the customer by their unique _id
+        {'$set': {'customer_score': 10}}  # Set the 'customer_score' to 10
+    )
+    print(f"Updated customer {customer['_id']} with customer_score: 10")
 
 
 
