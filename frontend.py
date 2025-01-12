@@ -45,6 +45,7 @@ from datetime import datetime
 from langchain import hub
 from dotenv import load_dotenv
 from prompt import PROMPT
+from functions import FUNCTION_DEFINITIONS, FUNCTION_MAP
 # troubleshooting notes
 #if you tend to close your laptop versus shutting down each night, I would recommend that you restart. I know that portaudio is a little temperamental if it isnt shutdown correctly (ie doing a cntl + c for a break).
 
@@ -103,7 +104,8 @@ SETTINGS = {
         "type": "anthropic"
       },
       "model": LLM_MODEL,
-      "instructions": PROMPT
+      "instructions": PROMPT,
+      "functions": FUNCTION_DEFINITIONS
     },
         "speak": {
             "model": VOICE
@@ -228,7 +230,7 @@ class VoiceAgent:
                             if isinstance(message, str):
                                 print(message)
                                 msg_data = json.loads(message)
-                                print("hehe",msg_data["type"], "hehe")
+                                
                                 if msg_data["type"] == 'ConversationText' and msg_data["role"] == "user":
                                     new_message = {
                                         "role": "user",
@@ -236,7 +238,7 @@ class VoiceAgent:
                                         "timestamp": datetime.now().strftime("%H:%M:%S")
                                     }
 
-                                    print(1, new_message)
+                                   
                                     st.session_state.conversation_history.append(new_message)
                                     render_conversation()
                                 
@@ -247,13 +249,34 @@ class VoiceAgent:
                                             "content": msg_data["content"],
                                             "timestamp": datetime.now().strftime("%H:%M:%S")
                                         }
-                                        print(2, new_message)
+                                        
                                         st.session_state.conversation_history.append(new_message)
                                         render_conversation()
                                         
                                 
                                 elif msg_data["type"] == "UserStartedSpeaking":
                                     speaker.stop()
+
+
+                                elif msg_data["type"] == "FunctionCallRequest":
+                                    
+                                    function_name = msg_data["function_name"]
+                                    function_args = msg_data["input"]
+                                    
+                                    function = FUNCTION_MAP.get(function_name)
+
+                                    
+                                    if function:
+                                        print('99999999999')
+                                        result = await function(**function_args)
+                                        print(result)
+                                        print(result,msg_data["function_call_id"],'---------')
+                                        await ws.send(json.dumps({
+                                            "type": "FunctionCallResponse",
+                                            "function_call_id": msg_data["function_call_id"],
+                                            "output": str(result)
+                                        }))
+
                             
                             elif isinstance(message, bytes):
                                 await speaker.play(message)
@@ -310,3 +333,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
