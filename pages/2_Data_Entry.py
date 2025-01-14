@@ -113,22 +113,140 @@ try:
                     st.error(f"Error adding call record: {str(e)}")
     
 
-    with tab_selection[3]:
-        st.header("Add Survey Results")
-        with st.form("survey_form"):
-            survey_info = st.text_area("Survey Information")
+    # with tab_selection[3]:
+    #     st.header("Add Survey Results")
+    #     with st.form("survey_form"):
+    #         survey_info = st.text_area("Survey Information")
             
-            submit_survey = st.form_submit_button("Add Survey")
+    #         submit_survey = st.form_submit_button("Add Survey")
+            
+    #         if submit_survey:
+    #             try:
+    #                 survey_data = {
+    #                     "survey_info": survey_info
+    #                 }
+    #                 db.survey.insert_one(survey_data)
+    #                 st.success("Survey added successfully!")
+    #             except Exception as e:
+    #                 st.error(f"Error adding survey: {str(e)}")
+
+    with tab_selection[3]:
+        st.header("Customer Feedback Survey")
+        with st.form("survey_form"):
+            # Basic Information
+            st.subheader("Personal Information")
+            customer_name = st.text_input("Name")
+            customer_email = st.text_input("Email")
+            contact_number = st.text_input("Contact Number")
+
+            # Service Details
+            # st.subheader("Service Information")
+            # service_type = st.selectbox(
+            #     "Type of Service Used",
+            #     ["Technical Support", "Customer Service", "Sales", "Product Support", "Other"]
+            # )
+            
+            # service_date = st.date_input("Date of Service")
+            
+            # Satisfaction Ratings
+            st.subheader("Satisfaction Ratings")
+            overall_satisfaction = st.slider(
+                "Overall satisfaction with our service",
+                1, 5, 3,
+                help="1 = Very Dissatisfied, 5 = Very Satisfied"
+            )
+            
+            response_time_rating = st.select_slider(
+                "How would you rate our response time?",
+                options=["Very Slow", "Slow", "Average", "Fast", "Very Fast"],
+                value="Average"
+            )
+            
+            # Problem Resolution
+            st.subheader("Problem Resolution")
+            issue_resolved = st.radio(
+                "Was your issue resolved?",
+                ["Yes", "Partially", "No"]
+            )
+            
+            if issue_resolved != "Yes":
+                pending_issues = st.text_area("Please describe any pending issues")
+            
+            # Staff Rating
+            # st.subheader("Staff Evaluation")
+            # staff_name = st.text_input("Name of representative (if known)")
+            # staff_rating = st.slider(
+            #     "How would you rate our staff's professionalism?",
+            #     1, 5, 3,
+            #     help="1 = Poor, 5 = Excellent"
+            # )
+            
+            # Product/Service Feedback
+            st.subheader("Product/Service Feedback")
+            product_satisfaction = st.select_slider(
+                "How satisfied are you with our product/service?",
+                options=["Very Dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very Satisfied"],
+                value="Neutral"
+            )
+            
+            would_recommend = st.radio(
+                "Would you recommend our service to others?",
+                ["Definitely", "Maybe", "No"]
+            )
+            
+            # Detailed Feedback
+            st.subheader("Additional Feedback")
+            strengths = st.text_area("What did you like most about our service?")
+            improvements = st.text_area("What areas could we improve?")
+            additional_comments = st.text_area("Any additional comments or suggestions?")
+
+            submit_survey = st.form_submit_button("Submit Feedback")
             
             if submit_survey:
                 try:
                     survey_data = {
-                        "survey_info": survey_info
+                        "customer_info": {
+                            "name": customer_name,
+                            "email": customer_email,
+                            "contact_number": contact_number
+                        },
+                        # "service_details": {
+                        #     "type": service_type,
+                        #     "date": service_date.strftime("%Y-%m-%d")
+                        # },
+                        "satisfaction_ratings": {
+                            "overall": overall_satisfaction,
+                            "response_time": response_time_rating
+                        },
+                        "resolution": {
+                            "issue_resolved": issue_resolved,
+                            "pending_issues": pending_issues if issue_resolved != "Yes" else None
+                        },
+                        # "staff_feedback": {
+                        #     "name": staff_name,
+                        #     "rating": staff_rating
+                        # },
+                        "product_feedback": {
+                            "satisfaction": product_satisfaction,
+                            "would_recommend": would_recommend
+                        },
+                        "detailed_feedback": {
+                            "strengths": strengths,
+                            "improvements": improvements,
+                            "additional_comments": additional_comments
+                        },
+                        "submission_date": datetime.now()
                     }
+                    
                     db.survey.insert_one(survey_data)
-                    st.success("Survey added successfully!")
+                    st.success("Thank you for your feedback! Your response has been recorded successfully.")
+                    
+                    # Optional: Send email notification -----> confirm this, email or whatsapp, whatever
+                    if customer_email:
+                        st.info("A confirmation email will be sent to your email address.")
+                        
                 except Exception as e:
-                    st.error(f"Error adding survey: {str(e)}")
+                    st.error(f"Error submitting survey: {str(e)}")
     
 
     st.header("Recent Entries")
