@@ -7,12 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 mongoURL = os.getenv("MONGO_URL")
-# Twilio setup
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
 def get_customer_data():
     # MongoDB connection string
     
@@ -72,25 +66,6 @@ def get_call_data():
     call_data = list(collection.find({}))  # You can add filters if needed
     return call_data
 
-def get_survey_data(customer_id):
-    # MongoDB connection string
-
-    # Parse the connection string to extract the database name
-    #parsed_uri = uri_parser.parse_uri(mongoURL)
-    db_name = "ENCODE"
-
-    if not db_name:
-        raise ValueError("Database name is not specified in the connection string.")
-
-    # Connect to MongoDB
-    client = MongoClient(mongoURL)
-    db = client[db_name]  # Use the extracted database name
-    collection = db["survey"]  # Replace with your collection name
-
-    # Retrieve all customer data
-    survey_data = list(collection.find({"customer_id": customer_id}))  # You can add filters if needed
-    return survey_data
-
 
 def filter_customers_by_score(customers_data, products_data, calls_data, THRESHOLD=75):
     filtered_customers = []
@@ -118,22 +93,23 @@ def filter_customers_by_score(customers_data, products_data, calls_data, THRESHO
 def initiate_calls(customers):
     print("Initiating calls to customers...")
     # Twilio credentials (replace with your actual credentials)
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    client = Client(account_sid, auth_token)
 
     for customer in customers:
         print("Customer: ", customer)
         phone_number = customer.get("customer_number")
-        survey_analysis = get_survey_data(customer["customer_id"]).get("survey_info")
+        survey_analysis = customer.get("survey_analysis", "No analysis available.")
         print(f"Initiating call to {phone_number}...")
         if phone_number:
              # Generate TwiML with TTS
             response = VoiceResponse()
-            #response.say(survey_analysis, voice='alice', language='en-US')  # Use 'alice' for a natural voice
-            response.say("This call is being transcribed in real time.", voice="alice", language="en-US")
-            response.start().stream(url="https://d1b0-14-139-196-251.ngrok-free.app")
-            call = twilio_client.calls.create(
+            response.say(survey_analysis, voice='alice', language='en-US')  # Use 'alice' for a natural voice
+            call = client.calls.create(
                # url = "http://demo.twilio.com/docs/voice.xml",
-                to="+91 79828 39139",#"+91 98107 17024", 
-                from_=TWILIO_PHONE_NUMBER,  # Replace with your Twilio number
+                to="+91 79828 39139",
+                from_=os.getenv("TWILIO_PHONE_NUMBER"),  # Replace with your Twilio number
                 twiml=str(response)
             )
             print(f"Call initiated to {phone_number}, Call SID: {call.sid}")

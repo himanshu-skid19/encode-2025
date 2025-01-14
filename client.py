@@ -23,6 +23,7 @@ from datetime import datetime
 from langchain import hub
 from dotenv import load_dotenv
 from prompt import PROMPT
+from functions import FUNCTION_DEFINITIONS, FUNCTION_MAP
 load_dotenv()
 
 # troubleshooting notes
@@ -82,7 +83,8 @@ SETTINGS = {
         "type": "anthropic"
       },
       "model": LLM_MODEL,
-      "instructions": PROMPT
+      "instructions": PROMPT,
+      "functions": FUNCTION_DEFINITIONS
     },
         "speak": {
             "model": VOICE
@@ -155,9 +157,29 @@ async def run():
                     async for message in ws:
                         if type(message) is str:
                             print(message)
+                            msg_data = json.loads(message)
 
                             if json.loads(message)["type"] == "UserStartedSpeaking":
                                 speaker.stop()
+
+                            elif json.loads(message)["type"]== "FunctionCallRequest":
+                                
+                                function_name = msg_data["function_name"]
+                                function_args = msg_data["input"]
+                                
+                                function = FUNCTION_MAP.get(function_name)
+
+                                
+                                if function:
+                                    print('99999999999')
+                                    result = await function(**function_args)
+                                    print(result)
+                                    print(result,msg_data["function_call_id"],'---------')
+                                    await ws.send(json.dumps({
+                                        "type": "FunctionCallResponse",
+                                        "function_call_id": msg_data["function_call_id"],
+                                        "output": str(result)
+                                    }))
 
                         elif type(message) is bytes:
                             await speaker.play(message)
