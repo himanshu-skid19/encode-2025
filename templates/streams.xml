@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Response>
-  <Say>Speak now bitch.</Say>
+  <Say>Speak now.</Say>
   <Connect>
     <Stream url="wss://3bde-14-139-196-170.ngrok-free.app/streams"> 
       <Parameter name="aCustomParameter" value="aCustomValue that was set in TwiML" />

@@ -30,13 +30,13 @@ async def success():
     
 
 
-    account_sid = 'AC38db8f90e828f32babcbae0052c0b019'
-    auth_token = '45e01b1a38edc7265d0eb2b1c39b7867'
+    account_sid = 'ACfe071170b73cf0110fff2db7c9ff9476'
+    auth_token = '20a38f79fa3f0f13160a9093c79e6010'
     client = Client(account_sid, auth_token)
 
     message = client.messages.create(
     from_='whatsapp:+14155238886',
-    to='whatsapp:+919031910788',
+    to='whatsapp:+919810717024',
     body='Thank You for purchasing the product with us. We would appreciate if you could take a moment to fill out the survey form. https://forms.gle/6FV1hmDun6rB9SpQ6'
     )
 

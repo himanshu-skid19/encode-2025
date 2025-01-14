@@ -62,14 +62,14 @@ def main():
             - 🗂️ View your entire conversation history
             - 🤓 Interact with various AI models including Claude 3.5 Haiku
             
-            To get started, click on the '🎤 Voice Chat' tab in the sidebar to begin your conversation!
+            To get started, click on the 'VoiceAgent' tab in the sidebar to begin your conversation!
             """)
             
             # Quick start guide
             st.subheader("🚀 Quick Start Guide")
             st.markdown("""
-            1️⃣ Navigate to the 🎤 Voice Chat tab  
-            2️⃣ Allow 🎙️ microphone access when prompted  
+            1️⃣ Navigate to the VoiceAgent tab  
+            2️⃣ Let the Assistant say "How can I help you?"
             3️⃣ Start speaking naturally with your assistant  
             4️⃣ View your conversation in real-time  
             """)
@@ -86,7 +86,7 @@ def main():
             
             # Version info
             st.caption("🆚 Current Version: 1.0.0")
-            st.caption("🤖 Using Claude 3.5 Haiku")
+            st.caption("🤖 Using OpenAI-4o")
 
         # Features section
         st.header("✨ Key Features")
@@ -98,7 +98,7 @@ def main():
         
         with col4:
             st.markdown("### 🤖 AI Processing")
-            st.markdown("🧠 Advanced language processing using Claude 3.5 Haiku")
+            st.markdown("🧠 Advanced language processing using OpenAI-4o")
         
         with col5:
             st.markdown("### 🔊 Natural Speech")
@@ -107,9 +107,6 @@ def main():
         # Footer section
         st.divider()
         st.markdown("""
-        <div style='text-align: center'>
-            <p>❤️ Made with Streamlit, Deepgram, and Anthropic Claude</p>
-        </div>
         """, unsafe_allow_html=True)
 
 if __name__ == "__main__":

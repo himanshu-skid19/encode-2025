@@ -1,66 +1,111 @@
-# Voice Agent with Azure OpenAI Services
+# AI Electronics Sales Agent
 
- [![Discord](https://dcbadge.vercel.app/api/server/xWRaCDBtW4?style=flat)](https://discord.gg/xWRaCDBtW4)
+An advanced AI-powered cold calling sales agent designed specifically for electronics sales. This application combines real-time voice interaction with customer data analysis to create personalized sales conversations. Built with Streamlit, it leverages speech-to-text, text-to-speech, and large language model capabilities to conduct natural sales conversations and track customer interactions.
 
-A basic example of using Deepgram's Voice Agent API with OpenAI Azure.
+## Features
 
-## Getting an API Key
+- Automated cold calling for electronics sales
+- Intelligent sales conversation management
+- Customer purchase history tracking and analysis
+- Personalized product recommendations
+- Real-time voice interaction with AI
+- Speech-to-text conversion using Deepgram
+- Natural language processing using GPT models
+- Text-to-speech synthesis with natural voice
+- Live conversation display in Streamlit interface
+- Support for custom sales functions and API integrations
+- MongoDB integration for customer relationship management
+- Detailed conversation history tracking
+- Real-time audio streaming
+- Sales performance analytics
 
-🔑 To access the Deepgram API you will need a [free Deepgram API Key](https://console.deepgram.com/signup?jump=keys).
+## Prerequisites
 
-## Documentation
+- Python 3.7+
+- PyAudio
+- Streamlit
+- MongoDB instance
 
-You can learn more about the Deepgram API at [developers.deepgram.com](https://developers.deepgram.com/docs).
+## Required API Keys
+
+The following API keys need to be set as environment variables:
+
+```bash
+DEEPGRAM_API_KEY=your_deepgram_key
+OPENAI_API_KEY=your_openai_key
+MONGO_URL=your_mongodb_url
+```
 
 ## Installation
 
-This is a Python client for interacting with Deepgram's Voice Agent API andd Azure OpenAI Services.
+1. Clone the repository
+2. Install the required packages:
 
-## Instructions
+```bash
+pip install -r requirements.txt
+```
 
-1. Install the dependencies in `requirements.txt`. For example, on Ubuntu using a virtual environment:
+## Configuration
 
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    ```
+The application uses several configuration settings that can be modified:
 
-2. Set an environment variable with your Deepgram API key:
+- Voice Agent URL: `wss://agent.deepgram.com/agent`
+- Voice Model: "aura-luna-en"
+- STT Model: "nova-2"
+- LLM Model: "gpt-4o-mini"
+- Audio Settings:
+  - Sample Rate: 16000 Hz
+  - Encoding: linear16
+  - Chunk Size: 0.05 seconds
 
-    ```bash
-    export DEEPGRAM_API_KEY=<your-key-here>
-    ```
-3. Set an environment variable with your Azure OpenAI Services API key:
+## Usage
 
-    ```bash
-    export AZURE_OPENAI_API_KEY=<your-key-here>
-    ```
+1. Set up your customer database in MongoDB with electronics product catalog and customer information
 
-3. Run the client:
+2. Start the application:
+```bash
+streamlit run main.py
+```
+3. The application will open in your default web browser
+4. Load customer lists and sales targets
+5. Allow microphone access when prompted
+6. Monitor and manage sales calls in real-time
+7. View conversation history and sales performance metrics
+8. Access customer purchase history and preferences
+9. Track successful sales and follow-up requirements
 
-    ```bash
-    python3 client.py
-    ```
+### Sales Features
 
-4. Start talking into your mic. This client doesn't have echo cancellation; you'll want to use headphones so the agent doesn't hear itself and think it's user speech.
+- Automatic customer profile loading
+- Previous purchase history integration
+- Product recommendation engine
+- Customizable sales scripts and responses
+- Real-time sales performance tracking
+- Call outcome recording and analysis
+- Follow-up scheduling automation
+
+## Troubleshooting
+
+- If experiencing audio issues, restart your computer, especially if you typically close your laptop instead of shutting down
+- Use Postman to test API keys and endpoints
+- Check if PortAudio is properly initialized
+- Ensure all required environment variables are set
+- Verify microphone permissions are granted to the application
+
+## File Structure
+
+- `VoiceAgent.py`: Main application file containing Streamlit interface and voice agent logic
+- `model.py`: Contains database models and interactions
+- `prompt.py`: Defines conversation prompts and templates
+- `functions.py`: Contains custom function definitions and mappings
+- `customer_id.txt`: Stores current customer ID for personalization
 
 
-## Development and Contributing
+## Error Handling
 
-Interested in contributing? We ❤️ pull requests!
-
-To make sure our community is safe for all, be sure to review and agree to our
-[Code of Conduct](./.github/CODE_OF_CONDUCT.md). Then see the
-[Contribution](./.github/CONTRIBUTING.md) guidelines for more information.
-
-## Getting Help
-
-We love to hear from you so if you have questions, comments or find a bug in the
-project, let us know! You can either:
-
-- [Open an issue in this repository](https://github.com/deepgram/voice-agent-azure-open-ai-services/issues/new)
-- [Join the Deepgram Github Discussions Community](https://github.com/orgs/deepgram/discussions)
-- [Join the Deepgram Discord Community](https://discord.gg/xWRaCDBtW4)
-
-[license]: LICENSE.txt
+The application includes robust error handling for:
+- WebSocket connections
+- Audio stream management
+- API calls
+- Database operations
+- Function execution
