@@ -1,6 +1,6 @@
 import streamlit as st
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timezone
 import pandas as pd
 from sync_chroma_with_mongo import *
 import threading
@@ -77,7 +77,11 @@ try:
                     prod_id = st.number_input(f"Product ID #{i+1}", min_value=1, step=1, key=f"prod_id_{i}")
                 with col2:
                     date_bought = st.date_input(f"Date Bought #{i+1}", key=f"date_{i}")
-                products.append({"product_id": prod_id, "date_bought": date_bought})
+                    # Convert to datetime with timezone
+                    date_bought = datetime.combine(date_bought, datetime.min.time())
+                    date_bought = date_bought.replace(tzinfo=timezone.utc)
+                    # Don't convert to string - keep as datetime object
+                    products.append({"product_id": prod_id, "date_bought": date_bought})
             
             submit_customer = st.form_submit_button("Add Customer")
             
