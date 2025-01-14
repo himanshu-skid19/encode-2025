@@ -3,10 +3,11 @@ from twilio.rest import Client
 from twilio.twiml.voice_response import VoiceResponse
 import os
 from dotenv import load_dotenv
+import datetime
 
 load_dotenv()
 
-mongoURL = os.getenv("MONGO_URL")
+mongoURL = 'mongodb+srv://actedcone:dualipa@atlascluster.t9cnxbb.mongodb.net/?retryWrites=true&w=majority&appName=AtlasCluster'
 def get_customer_data():
     # MongoDB connection string
     
@@ -27,6 +28,15 @@ def get_customer_data():
     customer_data = list(collection.find({}))  # You can add filters if needed
     print("Customer Data: ", customer_data)
     return customer_data
+
+def get_customer_details(customer_id):
+    client = MongoClient(mongoURL)
+    db = client.ENCODE
+
+    customers_collection = db.customers
+    x = customers_collection.find_one({"customer_id": int(customer_id)})
+    print("njn2qjneiqn2ei ", x)
+    return x
 
 def get_product_data():
     # MongoDB connection string

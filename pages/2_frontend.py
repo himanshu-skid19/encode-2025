@@ -81,6 +81,38 @@ USER_AUDIO_SAMPLES_PER_CHUNK = round(USER_AUDIO_SAMPLE_RATE * USER_AUDIO_SECS_PE
 
 AGENT_AUDIO_SAMPLE_RATE = 16000
 AGENT_AUDIO_BYTES_PER_SEC = 2 * AGENT_AUDIO_SAMPLE_RATE
+from model import *
+
+# def get_prompt():
+    
+#     PROMPT.format(customer_details)
+#     return PROMPT
+
+def format_purchases(products):
+    """Format the purchases list into a readable string"""
+    return "\n".join([f"- Product ID: {p['product_id']}, Purchased on: {p['date_bought'].strftime('%Y-%m-%d')}" 
+                     for p in products])
+
+mongoURL = os.getenv("MONGO_URL")
+
+def get_prompt():
+    """Create a personalized sales prompt from customer data"""
+    with open("customer_id.txt", "r") as f:
+        customer_id = f.read().strip()
+    print("##################################",customer_id)
+    customer_data=get_customer_details(customer_id)
+    # customer_data = customer_data[0]
+    print("Customer Data in get_prompt: ", customer_data)
+    new_prompt=PROMPT.format(
+        name=customer_data['name'],
+        customer_id=customer_data['customer_id'],
+        customer_number=customer_data['customer_number'],
+        formatted_purchases=format_purchases(customer_data['products']),
+        has_previous_purchases=len(customer_data['products']) > 0
+    )
+    print("prompt: ", new_prompt)
+    return new_prompt
+
 
 SETTINGS = {
     "type": "SettingsConfiguration",
@@ -104,7 +136,7 @@ SETTINGS = {
         "type": "open_ai"
       },
       "model": LLM_MODEL,
-      "instructions": PROMPT,
+      "instructions": get_prompt(),
       "functions": FUNCTION_DEFINITIONS
     },
         "speak": {
