@@ -1,7 +1,8 @@
+![Untitled Diagram drawio](https://github.com/user-attachments/assets/ecc58d72-3c2d-432c-a172-34b127cb2f51)
+
 # AI Electronics Sales Agent
 
-An advanced AI-powered cold calling sales agent designed specifically for electronics sales. This application c![Untitled Diagram drawio](https://github.com/user-attachments/assets/ecc58d72-3c2d-432c-a172-34b127cb2f51)
-ombines real-time voice interaction with customer data analysis to create personalized sales conversations. Built with Streamlit, it leverages speech-to-text, text-to-speech, and large language model capabilities to conduct natural sales conversations and track customer interactions.
+An advanced AI-powered cold calling sales agent designed specifically for electronics sales. This application combines real-time voice interaction with customer data analysis to create personalized sales conversations. Built with Streamlit, it leverages speech-to-text, text-to-speech, and large language model capabilities to conduct natural sales conversations and track customer interactions.
 
 ## Features
 
