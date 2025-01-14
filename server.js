@@ -3,6 +3,7 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const dotenv = require("dotenv");
+const { serpApiSearch } = require('./functions.js');
 dotenv.config();
 
 // Twilio
@@ -11,7 +12,7 @@ const WebSocketServer = require("websocket").server;
 const dispatcher = new HttpDispatcher();
 const wsserver = http.createServer(handleRequest); // Create HTTP server to handle requests
 
-const HTTP_SERVER_PORT = 8080; // Define the server port
+const HTTP_SERVER_PORT = process.env.PORT || 8080; // Define the server port
 let streamSid = ''; // Variable to store stream session ID
 
 const mediaws = new WebSocketServer({
@@ -80,7 +81,7 @@ dispatcher.onPost("/twiml", function (req, res) {
   });
 
   let readStream = fs.createReadStream(filePath);
-  // console.log("readStream: ", readStream);
+  console.log("readStream: ", readStream);
   readStream.pipe(res);
 });
 
@@ -157,25 +158,66 @@ class MediaStream {
 */
 async function promptLLM(mediaStream, prompt) {
   console.log('openai LLM: prompt = ', prompt);
-  const stream = openai.beta.chat.completions.stream({
-    model: 'gpt-4o-mini',
-    stream: true,
-    messages: [
-      {
-        role: 'assistant',
-        content: `You are funny, everything is a joke to you.`
+  
+  const tools = [
+    {
+      type: "function",
+      function: {
+        name: "serpApiSearch",
+        description: "Search the web using SerpApi's DuckDuckGo integration",
+        parameters: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "The search query to look up",
+            },
+            maxResults: {
+              type: "integer",
+              description: "Maximum number of results to return (default: 5)",
+              default: 5
+            },
+            region: {
+              type: "string",
+              description: "Search region/language code (default: us-en)",
+              default: "us-en"
+            }
+          },
+          required: ["query"],
+        },
       },
-      {
-        role: 'user',
-        content: prompt
-      }
-    ],
-  });
+    }
+  ];
 
-  speaking = true;
-  let firstToken = true;
-  for await (const chunk of stream) {
-    if (speaking) {
+  const messages = [
+    {
+      role: 'assistant',
+      content: `You are funny, everything is a joke to you.`
+    },
+    {
+      role: 'user',
+      content: prompt
+    }
+  ];
+
+  try {
+    speaking = true;
+    let firstToken = true;
+    let functionCallDetected = false;
+    let accumulatedMessage = '';
+
+    // First API call
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: messages,
+      tools: tools,
+      tool_choice: "auto",
+      stream: true
+    });
+
+    for await (const chunk of response) {
+      if (!speaking) break;
+
       if (firstToken) {
         const end = Date.now();
         const duration = end - llmStart;
@@ -184,18 +226,136 @@ async function promptLLM(mediaStream, prompt) {
         firstToken = false;
         firstByte = true;
       }
-      chunk_message = chunk.choices[0].delta.content;
+
+      // Check for function calls
+      if (chunk.choices[0]?.delta?.tool_calls) {
+        functionCallDetected = true;
+        break;
+      }
+
+      const chunk_message = chunk.choices[0]?.delta?.content || '';
       if (chunk_message) {
-        process.stdout.write(chunk_message)
-        if (!send_first_sentence_input_time && containsAnyChars(chunk_message)){
+        accumulatedMessage += chunk_message;
+        process.stdout.write(chunk_message);
+        if (!send_first_sentence_input_time && containsAnyChars(chunk_message)) {
           send_first_sentence_input_time = Date.now();
         }
-        mediaStream.deepgramTTSWebsocket.send(JSON.stringify({ 'type': 'Speak', 'text': chunk_message }));
+        
+        try {
+          await new Promise((resolve, reject) => {
+            mediaStream.deepgramTTSWebsocket.send(
+              JSON.stringify({ 'type': 'Speak', 'text': chunk_message }),
+              (err) => err ? reject(err) : resolve()
+            );
+          });
+        } catch (err) {
+          console.error('Error sending to TTS websocket:', err);
+        }
       }
     }
+
+    // Handle function calling if detected
+    if (functionCallDetected) {
+      try {
+        const functionResponse = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [...messages, { role: 'assistant', content: accumulatedMessage }],
+          tools: tools,
+          tool_choice: "auto",
+        });
+
+        const responseMessage = functionResponse.choices[0].message;
+        
+        if (responseMessage.tool_calls) {
+          messages.push(responseMessage);
+
+          // Execute SerpApi search with error handling
+          const functionResponses = await Promise.all(
+            responseMessage.tool_calls.map(async (toolCall) => {
+              try {
+                const functionArgs = JSON.parse(toolCall.function.arguments);
+                const searchResults = await serpApiSearch(
+                  functionArgs.query,
+                  "11273a8046c26dedf404c4fc02c3fc0ecc0fd50a3f25373ac344c4ab2044a176",
+                  {
+                    maxResults: functionArgs.maxResults || 5,
+                    region: functionArgs.region || 'us-en'
+                  }
+                );
+                return {
+                  tool_call_id: toolCall.id,
+                  role: "tool",
+                  name: toolCall.function.name,
+                  content: JSON.stringify(searchResults)
+                };
+              } catch (error) {
+                console.error('Error executing search:', error);
+                return {
+                  tool_call_id: toolCall.id,
+                  role: "tool",
+                  name: toolCall.function.name,
+                  content: JSON.stringify([{ 
+                    title: 'Error occurred',
+                    url: '',
+                    snippet: error.message
+                  }])
+                };
+              }
+            })
+          );
+
+          messages.push(...functionResponses);
+
+          // Final streaming call with search results
+          const finalStream = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: messages,
+            stream: true,
+          });
+
+          for await (const chunk of finalStream) {
+            if (!speaking) break;
+
+            const chunk_message = chunk.choices[0]?.delta?.content || '';
+            if (chunk_message) {
+              process.stdout.write(chunk_message);
+              if (!send_first_sentence_input_time && containsAnyChars(chunk_message)) {
+                send_first_sentence_input_time = Date.now();
+              }
+              
+              try {
+                await new Promise((resolve, reject) => {
+                  mediaStream.deepgramTTSWebsocket.send(
+                    JSON.stringify({ 'type': 'Speak', 'text': chunk_message }),
+                    (err) => err ? reject(err) : resolve()
+                  );
+                });
+              } catch (err) {
+                console.error('Error sending to TTS websocket:', err);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in function calling:', error);
+        // Send error message to TTS
+        const errorMessage = "I apologize, but I encountered an error while searching. Let me continue without the search results.";
+        await mediaStream.deepgramTTSWebsocket.send(JSON.stringify({ 'type': 'Speak', 'text': errorMessage }));
+      }
+    }
+  } catch (error) {
+    console.error('Error in promptLLM:', error);
+    // Send error message to TTS
+    const errorMessage = "I apologize, but I encountered an error. Please try again.";
+    await mediaStream.deepgramTTSWebsocket.send(JSON.stringify({ 'type': 'Speak', 'text': errorMessage }));
+  } finally {
+    // Always send the Flush command, even if there was an error
+    try {
+      await mediaStream.deepgramTTSWebsocket.send(JSON.stringify({ 'type': 'Flush' }));
+    } catch (err) {
+      console.error('Error sending flush command:', err);
+    }
   }
-  // Tell TTS Websocket were finished generation of tokens
-  mediaStream.deepgramTTSWebsocket.send(JSON.stringify({ 'type': 'Flush' }));
 }
 
 function containsAnyChars(str) {
@@ -223,12 +383,12 @@ const setupDeepgramWebsocket = (mediaStream) => {
 
   ws.on('message', function incoming(data) {
     // Handles barge in
-    console.log('deepgram TTS: entered message');
+    // console.log('deepgram TTS: entered message');
     if (speaking) {
-      console.log("entered speaking");
+      // console.log("entered speaking");
       try {
         let json = JSON.parse(data.toString());
-        console.log('deepgram TTS: ', data.toString());
+        // console.log('deepgram TTS: ', data.toString());
         return;
       } catch (e) {
         // Ignore

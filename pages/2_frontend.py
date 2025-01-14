@@ -83,10 +83,6 @@ AGENT_AUDIO_SAMPLE_RATE = 16000
 AGENT_AUDIO_BYTES_PER_SEC = 2 * AGENT_AUDIO_SAMPLE_RATE
 from model import *
 
-# def get_prompt():
-    
-#     PROMPT.format(customer_details)
-#     return PROMPT
 
 def format_purchases(products):
     """Format the purchases list into a readable string"""
@@ -99,10 +95,7 @@ def get_prompt():
     """Create a personalized sales prompt from customer data"""
     with open("customer_id.txt", "r") as f:
         customer_id = f.read().strip()
-    print("##################################",customer_id)
     customer_data=get_customer_details(customer_id)
-    # customer_data = customer_data[0]
-    print("Customer Data in get_prompt: ", customer_data)
     new_prompt=PROMPT.format(
         name=customer_data['name'],
         customer_id=customer_data['customer_id'],
@@ -267,7 +260,7 @@ class VoiceAgent:
                                     new_message = {
                                         "role": "assistant",
                                         "content":"Welcome ! How can I help you today?",
-                                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                                        "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                                     }
                                     st.session_state.conversation_history.append(new_message)
                                     render_conversation()
@@ -275,7 +268,7 @@ class VoiceAgent:
                                     new_message = {
                                         "role": "user",
                                         "content": msg_data["content"],
-                                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                                        "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                                     }
 
                                    
@@ -287,7 +280,7 @@ class VoiceAgent:
                                         new_message = {
                                             "role": "assistant",
                                             "content": msg_data["content"],
-                                            "timestamp": datetime.now().strftime("%H:%M:%S")
+                                            "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
                                         }
                                         
                                         st.session_state.conversation_history.append(new_message)
