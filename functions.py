@@ -45,13 +45,7 @@ async def query_product_db(query_text, n_results=3):
                 )
                 embeddings.append(result['embedding'])
             return embeddings
-    """
-    Query the existing ChromaDB product database and return formatted results
-    
-    Args:
-        query_text (str): The search query text
-        n_results (int): Number of results to return (default: 3)
-    """
+
     try:
        
         chroma_client = chromadb.PersistentClient(path="./chroma_db")
