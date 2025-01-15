@@ -25,23 +25,28 @@ async def duckduckgo_search(query, max_results=5):
 
 
 async def success():
-    print("******************************************")
-    from twilio.rest import Client
-    
+
+    try:
+        print("******************************************")
+        from twilio.rest import Client
+        
 
 
-    account_sid = 'ACfe071170b73cf0110fff2db7c9ff9476'
-    auth_token = '20a38f79fa3f0f13160a9093c79e6010'
-    client = Client(account_sid, auth_token)
+        account_sid = 'ACfe071170b73cf0110fff2db7c9ff9476'
+        auth_token = '20a38f79fa3f0f13160a9093c79e6010'
+        client = Client(account_sid, auth_token)
 
-    message = client.messages.create(
-    from_='whatsapp:+14155238886',
-    to='whatsapp:+919810717024',
-    body='Thank You for purchasing the product with us. We would appreciate if you could take a moment to fill out the survey form. https://forms.gle/6FV1hmDun6rB9SpQ6'
-    )
+        message = client.messages.create(
+        from_='whatsapp:+14155238886',
+        to='whatsapp:+919810717024',
+        body='Thank You for purchasing the product with us. We would appreciate if you could take a moment to fill out the survey form. https://forms.gle/6FV1hmDun6rB9SpQ6'
+        )
 
-    print(message.sid)
-    print("SUCESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+        print(message.sid)
+        print("SUCESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+
+    except:
+        print("Sucess but form not sent")
 
 
 
@@ -67,8 +72,20 @@ async def query_product_db(query_text, n_results=3):
         chroma_client = chromadb.PersistentClient(path="./chroma_db")
         
      
-        os.environ["GEMINI_API_KEY"] = 'AIzaSyDO_9k4-rG2UoeRW5AQirXBvx6_XRVZpBo'
+        from dotenv import load_dotenv
+        import os
+        
+
+        # Load environment variables from .env file
+        load_dotenv()
+
+   
+        os.environ["GEMINI_API_KEY"] = os.getenv("GEMINI_API_KEY")
+
+      
         genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
+        print("Gemini API Key successfully loaded.")
         
 
         gemini_ef = GeminiEmbeddingFunction()

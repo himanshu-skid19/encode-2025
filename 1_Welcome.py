@@ -59,20 +59,13 @@ def main():
             
             - 🤖 Have natural voice conversations with an AI assistant
             - 🔄 Get real-time responses to your questions
-            - 🗂️ View your entire conversation history
-            - 🤓 Interact with various AI models including Claude 3.5 Haiku
+            - Enter your CUSTOMER_ID to personalize the conversation
+        
+        
             
-            To get started, click on the 'VoiceAgent' tab in the sidebar to begin your conversation!
             """)
             
-            # Quick start guide
-            st.subheader("🚀 Quick Start Guide")
-            st.markdown("""
-            1️⃣ Navigate to the VoiceAgent tab  
-            2️⃣ Let the Assistant say "How can I help you?"
-            3️⃣ Start speaking naturally with your assistant  
-            4️⃣ View your conversation in real-time  
-            """)
+
         
         with col2:
             # System Status

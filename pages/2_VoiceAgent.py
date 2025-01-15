@@ -46,32 +46,32 @@ from langchain import hub
 from dotenv import load_dotenv
 from prompt import PROMPT
 from functions import FUNCTION_DEFINITIONS, FUNCTION_MAP
-# troubleshooting notes
-#if you tend to close your laptop versus shutting down each night, I would recommend that you restart. I know that portaudio is a little temperamental if it isnt shutdown correctly (ie doing a cntl + c for a break).
 
-# use postman to test the api key and endpoint
-
-# Deepgram Voice Agent Code using Azure OpenAI Services
-
-# Your Deepgram Voice Agent URL
 VOICE_AGENT_URL = "wss://agent.deepgram.com/agent"
-# # Your Azure OpenAI endpoint
-# AZURE_URL = "Your Azure OpenAI endpoint here."
 
-os.environ["DEEPGRAM_API_KEY"] = "e8f6f8d073897bf83cd7856dc18cd3e6f0d3f503"
-os.environ["OPENAI_API_KEY"] = "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"
-os.environ["ANTHROPIC_API_KEY"] = "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"
-os.environ["GROQ_API_KEY"] = "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"
+
+# os.environ["DEEPGRAM_API_KEY"] = "e8f6f8d073897bf83cd7856dc18cd3e6f0d3f503"
+# os.environ["OPENAI_API_KEY"] = "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"
 
 
 
 
-# Your Deepgram TTS model
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+print("Deepgram API Key:", DEEPGRAM_API_KEY)
+print("OpenAI API Key:", OPENAI_API_KEY)
+
+
 VOICE = "aura-luna-en"
-# Your Deepgram STT model
+
 LISTEN = "nova-2"
-# Your model from Azure OpenAI Services
-# LLM_MODEL = "gpt-4o"
+
 LLM_MODEL = "gpt-4o-mini"
 
 
@@ -143,7 +143,7 @@ SETTINGS = {
 }
 
 class StreamlitSpeaker:
-    # [StreamlitSpeaker class remains the same]
+    
     def __init__(self):
         self._queue = None
         self._stream = None
@@ -300,7 +300,7 @@ class VoiceAgent:
 
                                     
                                     if function:
-                                        print('99999999999')
+                                        
                                         result = await function(**function_args)
                                         print(result)
                                         print(result,msg_data["function_call_id"],'---------')
@@ -340,15 +340,15 @@ def main():
     st.title("🎤 Voice Assistant")
     st.write("Speak to interact with the AI assistant. Your conversation will appear below in real-time.")
     
-    # Initialize session state
+ 
     initialize_session_state()
     
-    # Create two columns
+
     col1, col2 = st.columns([2, 1])
     
     with col1:
         st.subheader("Conversation")
-        # Create a container for messages
+        
         st.session_state.messages_container = st.empty()
         render_conversation()
     
@@ -357,7 +357,7 @@ def main():
         status_placeholder = st.empty()
         status_placeholder.info("Listening...")
     
-    # Run the voice agent
+    
     try:
         agent = VoiceAgent()
         asyncio.run(agent.run_agent())

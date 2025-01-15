@@ -22,9 +22,9 @@ try:
     db = get_database()
     
    
-    tab_selection = st.tabs(["Products", "Customers", "Calls", "Surveys"])
+    tab_selection = st.tabs(["Products", "Customers"])
     
-    # Products Tab
+
     with tab_selection[0]:
         st.header("Add New Product")
         with st.form("product_form"):
@@ -77,10 +77,10 @@ try:
                     prod_id = st.number_input(f"Product ID #{i+1}", min_value=1, step=1, key=f"prod_id_{i}")
                 with col2:
                     date_bought = st.date_input(f"Date Bought #{i+1}", key=f"date_{i}")
-                    # Convert to datetime with timezone
+                
                     date_bought = datetime.combine(date_bought, datetime.min.time())
                     date_bought = date_bought.replace(tzinfo=timezone.utc)
-                    # Don't convert to string - keep as datetime object
+             
                     products.append({"product_id": prod_id, "date_bought": date_bought})
             
             submit_customer = st.form_submit_button("Add Customer")
@@ -99,44 +99,44 @@ try:
                     st.error(f"Error adding customer: {str(e)}")
     
  
-    with tab_selection[2]:
-        st.header("Add Call Record")
-        with st.form("call_form"):
-            transcription = st.text_area("Call Transcription")
-            score = st.slider("Call Score", 0.0, 1.0, 0.5)
-            call_customer_id = st.number_input("Customer ID", min_value=1000, step=1)
+    # with tab_selection[2]:
+    #     st.header("Add Call Record")
+    #     with st.form("call_form"):
+    #         transcription = st.text_area("Call Transcription")
+    #         score = st.slider("Call Score", 0.0, 1.0, 0.5)
+    #         call_customer_id = st.number_input("Customer ID", min_value=1000, step=1)
             
-            submit_call = st.form_submit_button("Add Call Record")
+    #         submit_call = st.form_submit_button("Add Call Record")
             
-            if submit_call:
-                try:
-                    call_data = {
-                        "transcribed_call": transcription,
-                        "score": score,
-                        "customer_id": call_customer_id
-                    }
-                    db.calls.insert_one(call_data)
-                    st.success("Call record added successfully!")
-                except Exception as e:
-                    st.error(f"Error adding call record: {str(e)}")
+    #         if submit_call:
+    #             try:
+    #                 call_data = {
+    #                     "transcribed_call": transcription,
+    #                     "score": score,
+    #                     "customer_id": call_customer_id
+    #                 }
+    #                 db.calls.insert_one(call_data)
+    #                 st.success("Call record added successfully!")
+    #             except Exception as e:
+    #                 st.error(f"Error adding call record: {str(e)}")
     
 
-    with tab_selection[3]:
-        st.header("Add Survey Results")
-        with st.form("survey_form"):
-            survey_info = st.text_area("Survey Information")
+    # with tab_selection[3]:
+    #     st.header("Add Survey Results")
+    #     with st.form("survey_form"):
+    #         survey_info = st.text_area("Survey Information")
             
-            submit_survey = st.form_submit_button("Add Survey")
+    #         submit_survey = st.form_submit_button("Add Survey")
             
-            if submit_survey:
-                try:
-                    survey_data = {
-                        "survey_info": survey_info
-                    }
-                    db.survey.insert_one(survey_data)
-                    st.success("Survey added successfully!")
-                except Exception as e:
-                    st.error(f"Error adding survey: {str(e)}")
+    #         if submit_survey:
+    #             try:
+    #                 survey_data = {
+    #                     "survey_info": survey_info
+    #                 }
+    #                 db.survey.insert_one(survey_data)
+    #                 st.success("Survey added successfully!")
+    #             except Exception as e:
+    #                 st.error(f"Error adding survey: {str(e)}")
     
 
     st.header("Recent Entries")

@@ -25,6 +25,17 @@ An advanced AI-powered cold calling sales agent designed specifically for electr
 ## Demo Video
 https://github.com/user-attachments/assets/13cf1a22-b8d3-4165-aa95-55834e6f105f
 
+### Note:
+We initially attempted to create the whole program in python with streamlit but faced difficulties in deploying our voice agent there. Thus, we converted our code to Javascript and Typescript to work with ReactJS and NodeJS to ease deployment. 
+The structure of this repo is broadly divided into 4 sections:
+
+1. ```Root```: which contains the main python code which is what we'd recommend running for local testing 
+2. ```backend```: The code containing our backend made using NodeJS and MongoDB
+3. ```voice-agent-ui```: the code for our voice agent demo deployed in NextJS
+4. ```frontend```: the code for our dashboard for managing customer data
+
+
+
 ## Prerequisites
 
 - Python 3.7+
@@ -37,9 +48,9 @@ https://github.com/user-attachments/assets/13cf1a22-b8d3-4165-aa95-55834e6f105f
 The following API keys need to be set as environment variables:
 
 ```bash
-DEEPGRAM_API_KEY=your_deepgram_key
-OPENAI_API_KEY=your_openai_key
-MONGO_URL=your_mongodb_url
+DEEPGRAM_API_KEY="INSERT DEEPGRAM KEY HERE"
+OPENAI_API_KEY="INSERT OPENAI HERE"
+GEMINI_API_KEY="INSERT GEMINIKEY HERE"
 ```
 
 ## Installation
@@ -70,15 +81,12 @@ The application uses several configuration settings that can be modified:
 
 2. Start the application:
 ```bash
-streamlit run main.py
+streamlit run 1_Welcome.py
 ```
-3. The application will open in your default web browser
-4. Load customer lists and sales targets
-5. Allow microphone access when prompted
-6. Monitor and manage sales calls in real-time
-7. View conversation history and sales performance metrics
-8. Access customer purchase history and preferences
-9. Track successful sales and follow-up requirements
+3. You will see two options : Customer ID :(Enter 9999 for testing, or insert a valid Customer entry in the database and enter their Customer ID)
+4. Promt : You can enter the desired prompt for the LLM voice agent. Leaving it empty would default to the hard-coded prompt.
+5. After entering the Customer ID and prompt(optional), click the VoiceAgent tab to chat with the agent.
+6. You can also see and add entries in the MongoDB database.
 
 ### Sales Features
 
@@ -98,13 +106,6 @@ streamlit run main.py
 - Ensure all required environment variables are set
 - Verify microphone permissions are granted to the application
 
-## File Structure
-
-- `VoiceAgent.py`: Main application file containing Streamlit interface and voice agent logic
-- `model.py`: Contains database models and interactions
-- `prompt.py`: Defines conversation prompts and templates
-- `functions.py`: Contains custom function definitions and mappings
-- `customer_id.txt`: Stores current customer ID for personalization
 
 
 ## Error Handling
@@ -115,3 +116,10 @@ The application includes robust error handling for:
 - API calls
 - Database operations
 - Function execution
+
+
+## Team Members
+- Himanshu Singhal
+- Ayush Kumar
+- Anushka Gupta
+- Rishita Agarwal

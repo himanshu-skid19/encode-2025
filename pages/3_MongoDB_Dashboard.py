@@ -25,7 +25,7 @@ try:
     db = get_data()
     
  
-    tabs = st.tabs(["Products", "Customers", "Calls", "Survey Results"])
+    tabs = st.tabs(["Products", "Customers"])
     
 
     with tabs[0]:
@@ -73,25 +73,6 @@ try:
                     st.dataframe(products_bought)
     
 
-    with tabs[2]:
-        st.header("Call Analytics")
-        calls_df = pd.DataFrame(list(db.calls.find({}, {'_id': 0})))
-        if not calls_df.empty:
-           
-            st.metric("Total Calls", len(calls_df))
-            
-           
-            st.subheader("Call Score Distribution")
-            fig = px.histogram(calls_df, x='score',
-                             title="Distribution of Call Scores",
-                             nbins=10)
-            st.plotly_chart(fig, use_container_width=True)
-            
-        
-            st.subheader("Call Transcripts")
-            for _, call in calls_df.iterrows():
-                with st.expander(f"Call for Customer {call['customer_id']} (Score: {call['score']})"):
-                    st.write(call['transcribed_call'])
     
 
     # with tabs[3]:
@@ -162,110 +143,110 @@ try:
     #     else:
     #         st.info("No survey responses yet.")
 
-    with tabs[3]:
-        st.header("Survey Results")
+    # with tabs[3]:
+    #     st.header("Survey Results")
         
-        # Fetch survey data
-        survey_data = list(db.survey.find({}, {'_id': 0}))
+    
+    #     survey_data = list(db.survey.find({}, {'_id': 0}))
         
-        if survey_data:
-            # Flatten the nested dictionary for DataFrame
-            flattened_data = []
-            for survey in survey_data:
-                flat_dict = {
-                    'Customer Name': survey['customer_info']['name'],
-                    'Email': survey['customer_info']['email'],
-                    'Contact': survey['customer_info']['contact_number'],
-                    'Overall Satisfaction': survey['satisfaction_ratings']['overall'],
-                    'Response Time': survey['satisfaction_ratings']['response_time'],
-                    'Issue Resolution': survey['resolution']['issue_resolved'],
-                    'Pending Issues': survey['resolution'].get('pending_issues', 'None'),
-                }
-                flattened_data.append(flat_dict)
+    #     if survey_data:
+          
+    #         flattened_data = []
+    #         for survey in survey_data:
+    #             flat_dict = {
+    #                 'Customer Name': survey['customer_info']['name'],
+    #                 'Email': survey['customer_info']['email'],
+    #                 'Contact': survey['customer_info']['contact_number'],
+    #                 'Overall Satisfaction': survey['satisfaction_ratings']['overall'],
+    #                 'Response Time': survey['satisfaction_ratings']['response_time'],
+    #                 'Issue Resolution': survey['resolution']['issue_resolved'],
+    #                 'Pending Issues': survey['resolution'].get('pending_issues', 'None'),
+    #             }
+    #             flattened_data.append(flat_dict)
             
-            # Convert to DataFrame
-            survey_df = pd.DataFrame(flattened_data)
+    #         # Convert to DataFrame
+    #         survey_df = pd.DataFrame(flattened_data)
             
-            # Display metrics
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                avg_satisfaction = survey_df['Overall Satisfaction'].mean()
-                st.metric("Average Satisfaction", f"{avg_satisfaction:.1f}/5")
-            with col2:
-                resolved_rate = (survey_df['Issue Resolution'] == 'Yes').mean() * 100
-                st.metric("Resolution Rate", f"{resolved_rate:.1f}%")
-            with col3:
-                st.metric("Total Surveys", len(survey_df))
+    #         # Display metrics
+    #         col1, col2, col3 = st.columns(3)
+    #         with col1:
+    #             avg_satisfaction = survey_df['Overall Satisfaction'].mean()
+    #             st.metric("Average Satisfaction", f"{avg_satisfaction:.1f}/5")
+    #         with col2:
+    #             resolved_rate = (survey_df['Issue Resolution'] == 'Yes').mean() * 100
+    #             st.metric("Resolution Rate", f"{resolved_rate:.1f}%")
+    #         with col3:
+    #             st.metric("Total Surveys", len(survey_df))
             
-            # Display main table
-            st.subheader("Survey Overview")
-            st.dataframe(
-                survey_df,
-                column_config={
-                    "Customer Name": "Customer",
-                    "Overall Satisfaction": st.column_config.NumberColumn(
-                        "Satisfaction",
-                        help="Overall satisfaction rating out of 5",
-                        format="%.1f ⭐"
-                    ),
-                },
-                hide_index=True,
-                use_container_width=True
-            )
+         
+    #         st.subheader("Survey Overview")
+    #         st.dataframe(
+    #             survey_df,
+    #             column_config={
+    #                 "Customer Name": "Customer",
+    #                 "Overall Satisfaction": st.column_config.NumberColumn(
+    #                     "Satisfaction",
+    #                     help="Overall satisfaction rating out of 5",
+    #                     format="%.1f ⭐"
+    #                 ),
+    #             },
+    #             hide_index=True,
+    #             use_container_width=True
+    #         )
             
-            # Display detailed feedback in expandable sections
-            st.subheader("Detailed Feedback")
-            for survey in survey_data:
-                with st.expander(f"{survey['customer_info']['name']}"):
-                    # Create two columns for feedback
-                    col1, col2 = st.columns(2)
+         
+    #         st.subheader("Detailed Feedback")
+    #         for survey in survey_data:
+    #             with st.expander(f"{survey['customer_info']['name']}"):
+    #                 # Create two columns for feedback
+    #                 col1, col2 = st.columns(2)
                     
-                    with col1:
-                        st.markdown("**Customer Details**")
-                        details_df = pd.DataFrame({
-                            'Field': ['Name', 'Email', 'Contact'],
-                            'Value': [
-                                survey['customer_info']['name'],
-                                survey['customer_info']['email'],
-                                survey['customer_info']['contact_number']
-                            ]
-                        })
-                        st.dataframe(details_df, hide_index=True)
+    #                 with col1:
+    #                     st.markdown("**Customer Details**")
+    #                     details_df = pd.DataFrame({
+    #                         'Field': ['Name', 'Email', 'Contact'],
+    #                         'Value': [
+    #                             survey['customer_info']['name'],
+    #                             survey['customer_info']['email'],
+    #                             survey['customer_info']['contact_number']
+    #                         ]
+    #                     })
+    #                     st.dataframe(details_df, hide_index=True)
                     
-                    with col2:
-                        st.markdown("**Ratings**")
-                        ratings_df = pd.DataFrame({
-                            'Metric': ['Overall Satisfaction', 'Response Time'],
-                            'Rating': [
-                                f"{survey['satisfaction_ratings']['overall']}/5",
-                                survey['satisfaction_ratings']['response_time']
-                            ]
-                        })
-                        st.dataframe(ratings_df, hide_index=True)
+    #                 with col2:
+    #                     st.markdown("**Ratings**")
+    #                     ratings_df = pd.DataFrame({
+    #                         'Metric': ['Overall Satisfaction', 'Response Time'],
+    #                         'Rating': [
+    #                             f"{survey['satisfaction_ratings']['overall']}/5",
+    #                             survey['satisfaction_ratings']['response_time']
+    #                         ]
+    #                     })
+    #                     st.dataframe(ratings_df, hide_index=True)
                     
-                    st.markdown("**Issue Details**")
-                    issue_df = pd.DataFrame({
-                        'Field': ['Resolution Status', 'Pending Issues'],
-                        'Value': [
-                            survey['resolution']['issue_resolved'],
-                            survey['resolution'].get('pending_issues', 'None')
-                        ]
-                    })
-                    st.dataframe(issue_df, hide_index=True)
+    #                 st.markdown("**Issue Details**")
+    #                 issue_df = pd.DataFrame({
+    #                     'Field': ['Resolution Status', 'Pending Issues'],
+    #                     'Value': [
+    #                         survey['resolution']['issue_resolved'],
+    #                         survey['resolution'].get('pending_issues', 'None')
+    #                     ]
+    #                 })
+    #                 st.dataframe(issue_df, hide_index=True)
                     
-                    if 'detailed_feedback' in survey:
-                        st.markdown("**Feedback Comments**")
-                        feedback_df = pd.DataFrame({
-                            'Category': ['Strengths', 'Improvements', 'Additional Comments'],
-                            'Comments': [
-                                survey['detailed_feedback'].get('strengths', 'None provided'),
-                                survey['detailed_feedback'].get('improvements', 'None provided'),
-                                survey['detailed_feedback'].get('additional_comments', 'None provided')
-                            ]
-                        })
-                        st.dataframe(feedback_df, hide_index=True)
-        else:
-            st.info("No survey responses yet.")
+    #                 if 'detailed_feedback' in survey:
+    #                     st.markdown("**Feedback Comments**")
+    #                     feedback_df = pd.DataFrame({
+    #                         'Category': ['Strengths', 'Improvements', 'Additional Comments'],
+    #                         'Comments': [
+    #                             survey['detailed_feedback'].get('strengths', 'None provided'),
+    #                             survey['detailed_feedback'].get('improvements', 'None provided'),
+    #                             survey['detailed_feedback'].get('additional_comments', 'None provided')
+    #                         ]
+    #                     })
+    #                     st.dataframe(feedback_df, hide_index=True)
+    #     else:
+    #         st.info("No survey responses yet.")
 
 except Exception as e:
     st.error(f"Error connecting to MongoDB: {str(e)}")
