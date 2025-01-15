@@ -78,8 +78,9 @@ The application uses several configuration settings that can be modified:
 ## Usage
 
 1. Set up your customer database in MongoDB with electronics product catalog and customer information
+2. Go to https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn (create an account if you have not). Follow the steps to verify your whatsapp number and replace the auth_code and sid in the function success in the file functions.py. This basically sends the customer a feedback form link. The form is synced to google sheets which is synced to Mongodb through pythonanywhere.com. (This step is just for sending the form to your whatsapp number, you may skip it.)
 
-2. Start the application:
+3. Start the application:
 ```bash
 streamlit run 1_Welcome.py
 ```
