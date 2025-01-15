@@ -4,6 +4,7 @@
 
 An advanced AI-powered cold calling sales agent designed specifically for electronics sales. This application combines real-time voice interaction with customer data analysis to create personalized sales conversations. Built with Streamlit, it leverages speech-to-text, text-to-speech, and large language model capabilities to conduct natural sales conversations and track customer interactions.
 
+
 ## Features
 
 - Automated cold calling for electronics sales
@@ -20,6 +21,9 @@ An advanced AI-powered cold calling sales agent designed specifically for electr
 - Detailed conversation history tracking
 - Real-time audio streaming
 - Sales performance analytics
+
+## Demo Video
+https://github.com/user-attachments/assets/13cf1a22-b8d3-4165-aa95-55834e6f105f
 
 ## Prerequisites
 
